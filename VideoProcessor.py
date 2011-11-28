@@ -3,6 +3,8 @@ from LaneMarkersModel import LaneMarkersModel
 from LaneMarkersModel import normalize
 import numpy as np
 
+from Sensor import LaneSensor
+
 stream = cv.VideoCapture("T:\_DIMA_DATA\Video\LaneDepartureWarningTestVideo\converted\out6.avi") #6 7 8
 if stream.isOpened() == False:
     print "Cannot open input video"
@@ -16,6 +18,18 @@ yellowLaneModel = LaneMarkersModel()
 #yellowLaneModel.InitializeFromImage(cv.GaussianBlur(np.float32(img)/255.0, (5, 5), 2), "Select yellow lane points")
 yellowLaneModel.InitializeFromImage(np.float32(img)/255.0, "Select yellow lane points")
 
+line1Start = np.array([2, 148])
+line1End = np.array([281, 0])
+leftLineSensors = []
+sensorsNumber = 50
+sensorsWidth = 50
+for iSensor in range(0, sensorsNumber):
+    sensor = LaneSensor()
+    pos = line1Start + iSensor*(line1End-line1Start)/(sensorsNumber+1)
+    sensor.SetGeometry(pos, sensorsWidth)
+    sensor.InitializeModel((0.9382180306192947, 0.989098653809665, 0.9846667443236259), (172.64653449609088, 0.05346018975006449, 0.9909903692872556), (0.8318770212301404, 0.784796499543384, 0.6864621111668014), (41.02017792349725, 0.17449159984689502, 0.832041028240797))
+    leftLineSensors.append(sensor) 
+
 while(cv.waitKey(1) != 27):
     #read and crop
     flag, imgFull = stream.read()
@@ -26,9 +40,9 @@ while(cv.waitKey(1) != 27):
 
     #convert to HSV
     hsv = np.float32(cv.cvtColor(img, cv.COLOR_RGB2HSV))
-    cv.imshow("H", normalize(cv.split(hsv)[0]))
-    cv.imshow("S", normalize(cv.split(hsv)[1]))
-    cv.imshow("V", normalize(cv.split(hsv)[2]))
+    cv.imshow("H", normalize(hsv[:,:,0]))
+    cv.imshow("S", normalize(hsv[:,:,1]))
+    cv.imshow("V", normalize(hsv[:,:,2]))
     
     #RGB distance
     distRgb = abs(img-yellowLaneModel.avgRGB)
@@ -92,7 +106,10 @@ while(cv.waitKey(1) != 27):
     cv.imshow("Flooded Canny", mask*canny)
 
     cv.circle(img, (xl, ym), 2, [100, 0, 0])    
-    cv.circle(img, (xr, ym), 2, [100, 0, 0])    
+    cv.circle(img, (xr, ym), 2, [100, 0, 0])
+    for sensor in leftLineSensors:
+        sensor.UpdatePositionBasedOnCanny(canny)
+        sensor.DrawGeometry(img)    
     cv.imshow("N", img)
     
 cv.destroyAllWindows()
