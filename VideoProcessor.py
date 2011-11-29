@@ -6,7 +6,7 @@ from Sensor import LaneSensor
 from LineDetector import LineDetector
 
 #Initialize video input
-stream = cv.VideoCapture("T:\_DIMA_DATA\Video\LaneDepartureWarningTestVideo\converted\out7.avi") #6 7 8
+stream = cv.VideoCapture("T:\_DIMA_DATA\Video\LaneDepartureWarningTestVideo\converted\out6.avi") #6 7 8
 if stream.isOpened() == False:
     print "Cannot open input video"
     exit()

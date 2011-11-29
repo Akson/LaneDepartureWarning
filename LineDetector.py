@@ -49,14 +49,18 @@ class LineDetector():
 
     def CheckLinePositionAndDrawOutput(self, outputFull, img):
         testLineXOkColor = np.array([0,255,0])/1.0
-        testLeftLineXAlert = 130
-        testRightLineXAlert = 585
         testLineXAlertColor = np.array([0,128,255])/1.0
-        testLeftLineXDanger = 250
-        testRightLineXDanger = 465
         testLineXDangerColor = np.array([0,0,255])/1.0
+        
+        testLeftLineXAlert = 130
+        testLeftLineXDanger = 250
+
+        testRightLineXAlert = 570
+        testRightLineXDanger = 450
 
         testLeftLineY = 129
+        
+        #find intersection of a lane edge and test line
         testLeftLineIntersection = int(self.lineModel(testLeftLineY))
         
         #make final output
@@ -71,16 +75,15 @@ class LineDetector():
                 lanePositionColor = testLineXDangerColor
         if testLeftLineIntersection > img.shape[1]/2: 
             if testLeftLineIntersection < testRightLineXAlert: 
-                lanePosition = 'AlertLeft'
+                lanePosition = 'AlertRight'
                 lanePositionColor = testLineXAlertColor
             if testLeftLineIntersection < testRightLineXDanger: 
-                lanePosition = 'DangerLeft'
+                lanePosition = 'DangerRight'
                 lanePositionColor = testLineXDangerColor
     
         #line model
         cv.line(outputFull, (self.cropArea[0]+int(self.lineModel(0)), self.cropArea[1]+0), (self.cropArea[0]+int(self.lineModel(img.shape[0])), self.cropArea[1]+img.shape[0]), [255, 0, 0], 2)        
         cv.line(outputFull, (self.cropArea[0]+0,self.cropArea[1]+testLeftLineY) , (self.cropArea[0]+img.shape[1],self.cropArea[1]+testLeftLineY), [0.2,0.2,0.2])
-        
         #zones L
         cv.line(outputFull, (self.cropArea[0]+0,self.cropArea[1]+testLeftLineY) , (self.cropArea[0]+testLeftLineXAlert,self.cropArea[1]+testLeftLineY), testLineXOkColor, 2)
         cv.line(outputFull, (self.cropArea[0]+testLeftLineXAlert,self.cropArea[1]+testLeftLineY) , (self.cropArea[0]+testLeftLineXDanger,self.cropArea[1]+testLeftLineY), testLineXAlertColor, 2)
@@ -98,4 +101,10 @@ class LineDetector():
         if lanePosition == 'DangerLeft':
             cv.line(outputFull, (img.shape[1]/2-30,50), (img.shape[1]/2-25-30,75), lanePositionColor, 15)
             cv.line(outputFull, (img.shape[1]/2-30,100), (img.shape[1]/2-25-30,75), lanePositionColor, 15)
+        if lanePosition == 'AlertRight' or lanePosition == 'DangerRight':
+            cv.line(outputFull, (img.shape[1]/2,50), (img.shape[1]/2+25,75), lanePositionColor, 15)
+            cv.line(outputFull, (img.shape[1]/2,100), (img.shape[1]/2+25,75), lanePositionColor, 15)
+        if lanePosition == 'DangerRight':
+            cv.line(outputFull, (img.shape[1]/2+30,50), (img.shape[1]/2+25+30,75), lanePositionColor, 15)
+            cv.line(outputFull, (img.shape[1]/2+30,100), (img.shape[1]/2+25+30,75), lanePositionColor, 15)
         
