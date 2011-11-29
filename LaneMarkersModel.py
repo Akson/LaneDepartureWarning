@@ -40,9 +40,9 @@ class LaneMarkersModel():
             largeMask = np.zeros((img.shape[0]+2, img.shape[1]+2), np.uint8)
             largeMask[:] = 0
             lo = 20
-            hi = 200
+            hi = 20
             flags = cv.FLOODFILL_FIXED_RANGE
-            cv.floodFill(flooded, largeMask, (self.initialPoints[0][1], self.initialPoints[0][0]), (0, 255, 0), (lo,)*3, (hi,)*3, flags)
+            cv.floodFill(flooded, largeMask, (self.initialPoints[0][1], self.initialPoints[0][0]), (0, 255, 0), (lo,), (hi,), flags)
             mask = largeMask[1:largeMask.shape[0]-1, 1:largeMask.shape[1]-1]
             cv.imshow(windowName, mask*255)
 #            cv.imshow(windowName,self.lineProbabilityMap)

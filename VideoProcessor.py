@@ -20,15 +20,22 @@ yellowLaneModel.InitializeFromImage(np.float32(img)/255.0, "Select yellow lane p
 
 line1Start = np.array([2, 148])
 line1End = np.array([281, 0])
+
+#line1Start = np.array([71, 163])
+#line1End= np.array([303, 3])
+
 leftLineSensors = []
-sensorsNumber = 50
+sensorsNumber = 70
 sensorsWidth = 50
 for iSensor in range(0, sensorsNumber):
     sensor = LaneSensor()
     pos = line1Start + iSensor*(line1End-line1Start)/(sensorsNumber+1)
     sensor.SetGeometry(pos, sensorsWidth)
-    sensor.InitializeModel((0.9382180306192947, 0.989098653809665, 0.9846667443236259), (172.64653449609088, 0.05346018975006449, 0.9909903692872556), (0.8318770212301404, 0.784796499543384, 0.6864621111668014), (41.02017792349725, 0.17449159984689502, 0.832041028240797))
+    sensor.InitializeModel(yellowLaneModel.avgRGB, yellowLaneModel.avgHSV, (0.8318770212301404, 0.784796499543384, 0.6864621111668014), (41.02017792349725, 0.17449159984689502, 0.832041028240797))
+#    sensor.InitializeModel((0.9382180306192947, 0.989098653809665, 0.9846667443236259), (172.64653449609088, 0.05346018975006449, 0.9909903692872556), (0.8318770212301404, 0.784796499543384, 0.6864621111668014), (41.02017792349725, 0.17449159984689502, 0.832041028240797))
     leftLineSensors.append(sensor) 
+
+leftLineModel = np.poly1d(np.polyfit([line1Start[1], line1End[1]], [line1Start[0], line1End[0]], 1)) 
 
 while(cv.waitKey(1) != 27):
     #read and crop
@@ -84,17 +91,18 @@ while(cv.waitKey(1) != 27):
     cv.imshow("edges", edges*canny)
     
     yellowLaneModel.UpdateModelFromMask(threshP, img, hsv)
-    
+    '''
     moments = cv.moments(threshP)
-    xm = int(moments['m10']/moments['m00'])
-    ym = int(moments['m01']/moments['m00'])
+    if moments['m00']>1e-5:
+        xm = int(moments['m10']/moments['m00'])
+        ym = int(moments['m01']/moments['m00'])
     
     xline = canny[ym,:]
     xr=xm
     while (xline[xr]==0 and xr<len(xline)): xr+=1
     xl=xm
     while (xline[xl]==0 and xl>0): xl-=1
-    print xm, ym, xl, xr
+    #print xm, ym, xl, xr
     
     
     flooded = cv.dilate(np.uint8(canny), None)
@@ -105,11 +113,33 @@ while(cv.waitKey(1) != 27):
     mask = largeMask[1:largeMask.shape[0]-1, 1:largeMask.shape[1]-1]
     cv.imshow("Flooded Canny", mask*canny)
 
-    cv.circle(img, (xl, ym), 2, [100, 0, 0])    
-    cv.circle(img, (xr, ym), 2, [100, 0, 0])
+    cv.circle(outputImg, (xl, ym), 2, [100, 0, 0])
+    cv.circle(outputImg, (xr, ym), 2, [100, 0, 0])
+    
+    rgbLaneError = np.abs(img - [0.9382180306192947, 0.989098653809665, 0.9846667443236259])
+    rgbLaneDistance = np.sqrt(np.square(rgbLaneError[:,:,0])+np.square(rgbLaneError[:,:,1])+np.square(rgbLaneError[:,:,2]))
+    '''
+    #sensors
+    outputImg = img.copy()
+    laneCoordinatesX = []
+    laneCoordinatesY = []
     for sensor in leftLineSensors:
-        sensor.UpdatePositionBasedOnCanny(canny)
-        sensor.DrawGeometry(img)    
-    cv.imshow("N", img)
+        linesNumber, lineSegments, allSegments = sensor.FindSegments(img, hsv, canny, outputImg, leftLineModel(sensor.yPos))
+        if linesNumber == 1:
+            sensor.UpdatePositionAndModelFromRegion(img, hsv, lineSegments[0])
+            laneCoordinatesY.append((lineSegments[0][0]+lineSegments[0][1])/2)
+            laneCoordinatesX.append(sensor.yPos)
+#        if linesNumber == 0:
+#            sensor.UpdatePositionBasedOnCanny(canny)
+            
+        sensor.UpdatePositionIfItIsFarAway(leftLineModel(sensor.yPos))
+    
+    if len(laneCoordinatesX)>0:
+        leftLineModel = np.poly1d(np.polyfit(laneCoordinatesX, laneCoordinatesY, 1))
+        for sensor in leftLineSensors:
+            #cv.circle(outputImg, (laneCoordinatesX[i], laneCoordinatesY[i]), 2, [200, 0, 100], 2)
+            cv.circle(outputImg, (int(leftLineModel(sensor.yPos)), sensor.yPos), 2, [100, 0, 200], 1)
+    
+    cv.imshow("Output", outputImg)
     
 cv.destroyAllWindows()
