@@ -9,12 +9,15 @@ import numpy as np
 
 class LaneSensor():
     def __init__(self):
-        '''
-        Constructor
-        '''
-    xPos = 0
-    yPos = 0
-    width = 0
+        self.xPos = 0
+        self.yPos = 0
+        self.width = 0
+        self.lineRGB = [0, 0, 0]
+        self.lineHSV = [0, 0, 0]
+        self.lineWidth = [0, 0]
+        self.roadRGB = [0, 0, 0]
+        self.roadHSV = [0, 0, 0]
+
     def SetGeometry(self, position, width):
         self.xPos = max(0, position[0]-width/2)
         self.yPos = position[1] 
@@ -23,11 +26,6 @@ class LaneSensor():
     def DrawGeometry(self, img):
         cv.line(img, (self.xPos, self.yPos), (self.xPos+self.width, self.yPos), [0, 0, 255])
     
-    lineRGB = [0, 0, 0]
-    lineHSV = [0, 0, 0]
-    lineWidth = [0, 0]
-    roadRGB = [0, 0, 0]
-    roadHSV = [0, 0, 0]
     def InitializeModel(self, linergb, linehsv, roadrgb, roadhsv):
         self.lineRGB = linergb
         self.lineHSV = linehsv
@@ -55,8 +53,17 @@ class LaneSensor():
 
         probability, reliability = self.CalculatePixelsProperties(rgb, hsv)
 
-        #find Canny segments
+        #check if we have any data
+        if canny.shape[0] == 0: return [0, [], []]
+
+        #find start of a first segment
         segStart = 0
+        while canny[segStart] == 0: #find start of a first segment
+            segStart+=1 
+            if segStart == canny.shape[0]:
+                break
+            
+        #find Canny segments
         segments = []
         segmentProbability = 0
         for x in range(1, canny.shape[0]):
@@ -64,23 +71,23 @@ class LaneSensor():
                 segmentProbability = np.average(probability[segStart:x])
                 segments.append([segStart, x, segmentProbability])
                 segStart = x
-        segmentProbability = np.average(probability[segStart:canny.shape[0]])
-        segments.append([segStart, canny.shape[0], segmentProbability]) #add the last segment
-
+        
+        #find line segments
         lineSegments = []
         for seg in segments:
             segmentProbability = seg[2]
             #just check color
-            if segmentProbability > 0.95:
+            if segmentProbability > 0.85:
                 segmentProbability = 1
             else:
                 segmentProbability = 0
-                
+            
+            #check line width
             if self.lineWidth[1] > 10: 
-                if abs((seg[1]-seg[0])-self.lineWidth[0]/self.lineWidth[1]) > 10:
+                if abs((seg[1]-seg[0])-self.lineWidth[0]/self.lineWidth[1]) > 5+50/self.lineWidth[1]:
                     segmentProbability = 0
                     
-            cv.line(outputImg, (self.xPos+seg[0], self.yPos), (self.xPos+seg[1], self.yPos), [segmentProbability, segmentProbability, segmentProbability], 1)
+            cv.line(outputImg, (self.xPos+seg[0], self.yPos), (self.xPos+seg[1], self.yPos), [segmentProbability, segmentProbability, 0], 1)
             if(segmentProbability == 1):
                 lineSegments.append([self.xPos+seg[0], self.xPos+seg[1]])
         

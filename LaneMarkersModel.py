@@ -11,11 +11,11 @@ def normalize(a):
 
 class LaneMarkersModel():
     def __init__(self):
-        '''
-        Constructor
-        '''
-    avgRGB = [ 0.8888889,   0.99607843,  0.98823529 ]
-    avgHSV = [ 1.75261841e+02,   1.07563006e-01,   9.96078432e-01 ]
+        self.avgRGB = [ 0.8888889,   0.99607843,  0.98823529 ]
+        self.avgHSV = [ 1.75261841e+02,   1.07563006e-01,   9.96078432e-01 ]
+        self.lineProbabilityMap = 0
+        self.initialPoints = []
+
     def UpdateModelFromMask(self, mask, img, hsv):
         self.avgRGB = cv.mean(img, mask)[0:3]
         self.avgHSV = cv.mean(hsv, mask)[0:3]
@@ -23,10 +23,9 @@ class LaneMarkersModel():
         self.lineProbabilityMap = (1.0/(1.0+0.1*distMap))
         print self.avgRGB 
         print self.avgHSV 
-        cv.imshow('test',self.lineProbabilityMap)
-        cv.waitKey(1)
+        #cv.imshow('test',self.lineProbabilityMap)
+        #cv.waitKey(1)
     
-    lineProbabilityMap = 0
     def InitializeFromImage(self, img, windowName):
         cv.imshow(windowName, img)
         cv.setMouseCallback(windowName, self.AddPoint, [img, windowName])
@@ -45,37 +44,9 @@ class LaneMarkersModel():
             cv.floodFill(flooded, largeMask, (self.initialPoints[0][1], self.initialPoints[0][0]), (0, 255, 0), (lo,), (hi,), flags)
             mask = largeMask[1:largeMask.shape[0]-1, 1:largeMask.shape[1]-1]
             cv.imshow(windowName, mask*255)
-#            cv.imshow(windowName,self.lineProbabilityMap)
-#            cv.waitKey(1000)
-
             self.UpdateModelFromMask(mask, img, hsv)
-        
-        '''
-        if len(self.initialPoints)>0:
-            self.avgRGB = [0, 0, 0]
-            self.avgHSV = [0, 0, 0]
-            for point in self.initialPoints:
-                self.avgRGB+=img[point[0], point[1]]
-                self.avgHSV+=hsv[point[0], point[1]]
-            self.avgRGB/=len(self.initialPoints)
-            self.avgHSV/=len(self.initialPoints)
-        print "Average RGB:", self.avgRGB
-        print "Average HSV:", self.avgHSV
-        
-        #calculate line probability map
-        if len(self.initialPoints)>=4:
-            imgWithLines = np.zeros(img[:,:,0].shape, dtype=np.uint8)
-            imgWithLines.fill(1)
-            cv.line(imgWithLines, (self.initialPoints[0][1], self.initialPoints[0][0]), (self.initialPoints[1][1], self.initialPoints[1][0]), 0, 3)
-            cv.line(imgWithLines, (self.initialPoints[2][1], self.initialPoints[2][0]), (self.initialPoints[3][1], self.initialPoints[3][0]), 0, 3)
-            distMap = cv.distanceTransform(imgWithLines, cv.cv.CV_DIST_L2, 5)[0]
-            self.lineProbabilityMap = 1.0/(1.0+10*normalize(distMap))
-            cv.imshow(windowName,self.lineProbabilityMap)
-            cv.waitKey(1000)
-        '''
         cv.destroyWindow(windowName)
 
-    initialPoints = []
     def AddPoint(self, event, x, y, flags, data):
         if event & cv.EVENT_LBUTTONUP:
             print x, y, data[0][y, x]
