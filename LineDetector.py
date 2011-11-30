@@ -40,7 +40,20 @@ class LineDetector():
             sensor.UpdatePositionIfItIsFarAway(self.lineModel(sensor.yPos))
         
         if len(laneCoordinatesX)>0:
-            self.lineModel = np.poly1d(np.polyfit(laneCoordinatesX, laneCoordinatesY, 1))
+            rank = 'ok'
+            try:
+                z = np.polyfit(laneCoordinatesX, laneCoordinatesY, 1)
+                print np.polyfit(laneCoordinatesX, laneCoordinatesY, 1, None, True)
+            except np.RankWarning:
+                rank = 'bad'
+                print "Line fiting problem"
+            except:
+                print 'URA!!!'
+            if rank == 'ok':
+                tmpLineModel = np.poly1d(z) 
+                self.lineModel = tmpLineModel
+            
+            #self.lineModel = np.poly1d(np.polyfit(laneCoordinatesX, laneCoordinatesY, 1))
             for sensor in self.lineSensors:
                 #cv.circle(outputImg, (laneCoordinatesX[i], laneCoordinatesY[i]), 2, [200, 0, 100], 2)
                 cv.circle(outputImg, (int(self.lineModel(sensor.yPos)), sensor.yPos), 2, [100, 0, 200], 1)
@@ -53,9 +66,9 @@ class LineDetector():
         testLineXDangerColor = np.array([0,0,255])/1.0
         
         testLeftLineXAlert = 130
-        testLeftLineXDanger = 250
+        testLeftLineXDanger = 230
 
-        testRightLineXAlert = 570
+        testRightLineXAlert = 550
         testRightLineXDanger = 450
 
         testLeftLineY = 129

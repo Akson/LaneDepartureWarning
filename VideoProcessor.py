@@ -6,18 +6,19 @@ from Sensor import LaneSensor
 from LineDetector import LineDetector
 
 #Initialize video input
-stream = cv.VideoCapture("T:\_DIMA_DATA\Video\LaneDepartureWarningTestVideo\converted\out6.avi") #6 7 8
+#stream = cv.VideoCapture(0) #6 7 8
+stream = cv.VideoCapture("T:\_DIMA_DATA\Video\LaneDepartureWarningTestVideo\converted\out7.avi") #6 7 8
 if stream.isOpened() == False:
     print "Cannot open input video"
     exit()
 
 #Initialize video writing
-#videoWriter = cv.VideoWriter('out.avi', cv.cv.CV_FOURCC('M','J','P','G'), 30, (640, 480), 1)
+videoWriter = cv.VideoWriter('out7Test1.avi', cv.cv.CV_FOURCC('M','J','P','G'), 30, (640, 480), 1)
 
 #some image processing parameters
 cropArea = [0, 124, 637, 298]
-sensorsNumber = 70
-sensorsWidth = 50
+sensorsNumber = 100
+sensorsWidth = 70
 
 #6L
 line1LStart = np.array([35, 128])
@@ -27,8 +28,8 @@ line1RStart = np.array([632, 146])
 line1REnd = np.array([476, 11])
 
 #7L
-#line1LStart = np.array([71, 163])
-#line1LEnd= np.array([303, 3])
+line1LStart = np.array([71, 163])
+line1LEnd= np.array([303, 3])
 
 #get first frame for color model
 flag, imgFull = stream.read()
@@ -67,6 +68,6 @@ while(cv.waitKey(1) != 27):
     cv.imshow("Output full", outputFull)
     
     #write output
-    #videoWriter.write(outputFull)
+    videoWriter.write(outputFull)
     
 cv.destroyAllWindows()
