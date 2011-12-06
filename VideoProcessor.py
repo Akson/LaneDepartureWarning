@@ -7,7 +7,7 @@ from LineDetector import LineDetector
 
 #Initialize video input
 #stream = cv.VideoCapture(0) #6 7 8
-stream = cv.VideoCapture("T:\_DIMA_DATA\Video\LaneDepartureWarningTestVideo\converted\out7.avi") #6 7 8
+stream = cv.VideoCapture("T:\_DIMA_DATA\Video\LaneDepartureWarningTestVideo\converted\out6.avi") #6 7 8
 if stream.isOpened() == False:
     print "Cannot open input video"
     exit()
@@ -17,7 +17,7 @@ videoWriter = cv.VideoWriter('out7Test1.avi', cv.cv.CV_FOURCC('M','J','P','G'), 
 
 #some image processing parameters
 cropArea = [0, 124, 637, 298]
-sensorsNumber = 100
+sensorsNumber = 50
 sensorsWidth = 70
 
 #6L
@@ -28,8 +28,8 @@ line1RStart = np.array([632, 146])
 line1REnd = np.array([476, 11])
 
 #7L
-line1LStart = np.array([71, 163])
-line1LEnd= np.array([303, 3])
+#line1LStart = np.array([71, 163])
+#line1LEnd= np.array([303, 3])
 
 #get first frame for color model
 flag, imgFull = stream.read()
@@ -45,7 +45,10 @@ rightLineColorModel = LaneMarkersModel()
 #rightLineColorModel.InitializeFromImage(np.float32(img)/255.0, "Select right line")
 rightLine = LineDetector(cropArea, sensorsNumber, sensorsWidth, line1RStart, line1REnd, rightLineColorModel)
 
+frameNumber = 0
 while(cv.waitKey(1) != 27):
+    frameNumber+=1
+    print frameNumber
     #read and crop
     flag, imgFull = stream.read()
     if flag == False: break #end of video

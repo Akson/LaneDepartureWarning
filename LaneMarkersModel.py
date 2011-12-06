@@ -49,7 +49,7 @@ class LaneMarkersModel():
 
     def AddPoint(self, event, x, y, flags, data):
         if event & cv.EVENT_LBUTTONUP:
-            print x, y, data[0][y, x]
+            #print x, y, data[0][y, x]
             self.initialPoints.append([y, x])
             imgWithLines = data[0]
             '''

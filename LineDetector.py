@@ -43,7 +43,7 @@ class LineDetector():
             rank = 'ok'
             try:
                 z = np.polyfit(laneCoordinatesX, laneCoordinatesY, 1)
-                print np.polyfit(laneCoordinatesX, laneCoordinatesY, 1, None, True)
+                #print np.polyfit(laneCoordinatesX, laneCoordinatesY, 1, None, True)
             except np.RankWarning:
                 rank = 'bad'
                 print "Line fiting problem"
